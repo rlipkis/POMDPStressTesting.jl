@@ -7,6 +7,7 @@ using Zygote
 using POMDPs
 using Random
 using Parameters
+using Plots
 using RLInterface
 using Distributed
 using Distributions

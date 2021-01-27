@@ -66,6 +66,7 @@ State of the AST MDP.
     t_index::Int64 = 0 # Confidence check that time corresponds
     parent::Union{Nothing,ASTState} = nothing # Parent state, `nothing` if root
     action::Union{Nothing,ASTAction} = nothing # Action taken from parent
+    state::GrayBox.State = nothing # State of simulation
     hash::UInt64 = hash(t_index, parent, action) # Hash simulation state to match with ASTState
     q_value::Float64 = 0.0 # Saved Q-value
     terminal::Bool = false # Indication of termination state

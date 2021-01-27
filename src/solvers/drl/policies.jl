@@ -14,7 +14,7 @@ function CategoricalPolicy(solver)
                        Dense(solver.hidden_layer_size, solver.action_size; initW=_random_normal, initb=constant_init),
                        x -> softmax(x))
 
-    value_net = Chain(Dense(solver.state_size, solver.hidden_layer_size ,relu; initW=_random_normal),
+    value_net = Chain(Dense(solver.state_size, solver.hidden_layer_size, relu; initW=_random_normal),
                       Dense(solver.hidden_layer_size, solver.hidden_layer_size, relu; initW=_random_normal),
                       Dense(solver.hidden_layer_size, 1; initW=_random_normal))
 
@@ -37,7 +37,6 @@ function DiagonalGaussianPolicy(solver, log_std)
               Dense(solver.hidden_layer_size, solver.action_size; initW=_random_normal, initb=constant_init),
               x->tanh.(x),
               x->2.0 .* x) # TODO. Make this vector of environment STDs (i.e. scale it to [-x, +x] action bound)
-
     value_net = Chain(Dense(solver.state_size, solver.hidden_layer_size, tanh; initW=_random_normal),
                       Dense(solver.hidden_layer_size, solver.hidden_layer_size, tanh; initW=_random_normal),
                       Dense(solver.hidden_layer_size, 1; initW=_random_normal))
@@ -62,12 +61,11 @@ function get_action(policy::DiagonalGaussianPolicy, state)
     # Our policy outputs the parameters of a Normal distribution
     μ = reshape(policy.μ(state), policy.solver.action_size)
     log_std = policy.logΣ
-
+   	 
     σ² = (exp.(log_std)).^2
     Σ = diagm(0=>σ²)
     distribution = MvNormal(μ, Σ)
-
-    return rand(distribution, policy.solver.action_size)
+    return rand(distribution)
 end
 
 
@@ -85,13 +83,22 @@ end
 
 
 function translate_ast_action(sim::GrayBox.Simulation, action, ::Type{ASTSampleAction})
-    gray_environment = GrayBox.environment(sim)
-    environment_sample = GrayBox.EnvironmentSample()
+    ## TODO: re-examine this; currently might not work because of weird dictionary ordering
+    #d = GrayBox.environment(sim)
+    #sample = GrayBox.pack(sim, action)
+	#for k in keys(d)
+	#	sample[k].logprob = logpdf(d[k], sample[k].value)
+	#end
+	#return ASTSampleAction(sample)
+
+	gray_environment = GrayBox.environment(sim)
+	environment_sample = GrayBox.EnvironmentSample()
     for (i,k) in enumerate(keys(gray_environment))
         # log-probability from the environment's distributions (not the log_prob from the NN policy)
         logp = logpdf(gray_environment[k], action[i])
         environment_sample[k] = GrayBox.Sample(action[i], logp)
     end
+
     return ASTSampleAction(environment_sample)
 end
 
@@ -186,9 +193,20 @@ function set_action_size!(solver, mdp::MDP)
     if actiontype(mdp)== ASTSeedAction
         solver.action_size = 1
     elseif actiontype(mdp) == ASTSampleAction
-        solver.action_size = length(GrayBox.environment(mdp.sim))
+        solver.action_size = GrayBox.count_actions(mdp.sim) #length(GrayBox.environment(mdp.sim))
     else
         @warn "solver.action_size not set for actiontype: $(actiontype(mdp))"
     end
+	
+	solver.state_size = length(GrayBox.state(mdp.sim))
     return solver
+end
+
+function count_action_params(env::GrayBox.Environment)
+	# TODO: obsolete now (?) 
+	n = 0
+	for dist in env
+		n += GrayBox.sample_length(dist)
+	end
+	return n
 end

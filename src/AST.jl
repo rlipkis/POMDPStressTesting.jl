@@ -169,8 +169,11 @@ function POMDPs.gen(mdp::ASTMDP, s::ASTState, a::ASTAction, rng::AbstractRNG=Ran
         end
     end
 
-    # Update state
-    sp = ASTState(t_index=mdp.t_index, parent=s, action=a)
+    # Get simlation state
+    state = GrayBox.state(mdp.sim)
+
+    # Update MDP state
+    sp = ASTState(t_index=mdp.t_index, parent=s, action=a, state=state)
     mdp.sim_hash = sp.hash
     sp.terminal = mdp.params.episodic_rewards ? false : BlackBox.isterminal(mdp.sim) # termination handled by end-of-rollout
     r::Float64 = reward(mdp, logprob, isevent, sp.terminal, miss_distance)
@@ -236,7 +239,12 @@ rand(rng::AbstractRNG, s::ASTState) = s
 """
 Used by the RLInterface to interact with deep RL solvers.
 """
-POMDPs.convert_s(::Type{Vector{Float32}}, s::ASTState, mdp::ASTMDP) = [s.hash]
+function POMDPs.convert_s(::Type{Vector{Float32}}, s::ASTState, mdp::ASTMDP)
+	if s.state == nothing
+		s.state = GrayBox.state(mdp.sim)
+	end
+	return s.state
+end
 
 
 

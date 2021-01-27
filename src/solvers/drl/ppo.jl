@@ -15,11 +15,15 @@
 
     # Training parameters
     num_episodes::Int64 = 10 # Number of epochs of interaction (equal to number of policy updates)
+    num_rollouts::Int64 = 10
     ppo_epochs::Int64 = 10 # Number of steps of interaction (state-action pairs) for the agent and the environment in each episode
     batch_size::Int64 = episode_length # Size of the batches to perfom the update on
     cₚ::Float64 = 1.0 # policy loss coefficient
     cᵥ::Float64 = 1.0 # value loss coefficient
     cₑ::Float64 = 0.01 # entropy loss coefficient
+    lp::Float64 = 0.0 # policy loss most recent value
+    lv::Float64 = 0.0 # value loss most recent value
+    le::Float64 = 0.0 # entropy loss most recent value
 
     # PPO parameters
     ϵ::Float64 = 0.1 # PPO gradient clipping
@@ -66,11 +70,14 @@ function loss(solver::PPOSolver, policy, states::Array, actions::Array, advantag
     surr1 = ratio .* advantages
     surr2 = clamp.(ratio, (1.0 - solver.ϵ), (1.0 + solver.ϵ)) .* advantages
     policy_loss = mean(min.(surr1, surr2))
+    solver.lp = policy_loss
 
     value_predicted = policy.value_net(states)
     value_loss = mean((value_predicted .- returns).^2)
+    solver.lv = value_loss
 
     entropy_loss = mean(entropy(policy, states))
+    solver.le = entropy_loss
 
     return -solver.cₚ*policy_loss + solver.cᵥ*value_loss - solver.cₑ*entropy_loss
 end

@@ -15,16 +15,18 @@ function run_episode(env::MDPEnvironment, policy::Union{CategoricalPolicy, Diago
             break
         end
     end
+
     return experience
 end
 
 
-function get_rollouts(env, policy, num_steps::Int)
+function get_rollouts(env, policy, num_rollouts::Int, num_steps::Int)
+    # TODO: fix multiprocessing (might not be worth it)
     g = []
-    for w in workers()
+    for _ in 1:num_rollouts
         push!(g, run_episode(env, policy, num_steps))
     end
-    fetch.(g)
+    return g
 end
 
 
@@ -32,7 +34,7 @@ end
 Process and extraction information from rollouts
 """
 function collect_rollouts!(env, solver, policy, episode_buffer::Buffer, num_steps::Int, stats_buffer::Buffer)
-    rollouts = get_rollouts(env, policy, num_steps)
+    rollouts = get_rollouts(env, policy, solver.num_rollouts, num_steps)
 
     # Process the variables
     states = []
@@ -99,7 +101,7 @@ function collect_rollouts!(env, solver, policy, episode_buffer::Buffer, num_step
         push!(rollout_returns, episode_returns)
     end
 
-    # Normalize advantage across all processes
+    # Normalize advantage across all processes TODO: why is this commented out?
     # advantages = normalize_across_procs(hcat(advantages...), solver.episode_length)
 
     episode_buffer.exp_dict["states"] = hcat(states...)
