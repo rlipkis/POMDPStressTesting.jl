@@ -1,5 +1,7 @@
 # POMDPStressTesting.jl
 
+Extending original package with full states, general actions, and more.
+
 [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://sisl.github.io/POMDPStressTesting.jl/dev/)
 [![Build Status](https://travis-ci.org/sisl/POMDPStressTesting.jl.svg?branch=master)](https://travis-ci.org/sisl/POMDPStressTesting.jl)
 [![codecov](https://codecov.io/gh/sisl/POMDPStressTesting.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/sisl/POMDPStressTesting.jl)
