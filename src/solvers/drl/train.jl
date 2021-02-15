@@ -80,7 +80,7 @@ function train!(planner::Union{TRPOPlanner, PPOPlanner})
 
 	# Process losses
 	m_avg(vs, n) = [sum(@view vs[i:(i+n-1)])/n for i in 1:(length(vs)-(n-1))]
-	n_smooth = 100
+	n_smooth = 10
 	lp = solver.cₚ*[loss[1] for loss in losses]
 	lv = solver.cᵥ*[loss[2] for loss in losses]
 	le = solver.cₑ*[loss[3] for loss in losses]

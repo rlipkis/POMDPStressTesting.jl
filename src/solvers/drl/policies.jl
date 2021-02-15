@@ -65,7 +65,8 @@ function get_action(policy::DiagonalGaussianPolicy, state)
     σ² = (exp.(log_std)).^2
     Σ = diagm(0=>σ²)
     distribution = MvNormal(μ, Σ)
-    return rand(distribution)
+    a = rand(distribution)
+    return a 
 end
 
 
@@ -83,21 +84,21 @@ end
 
 
 function translate_ast_action(sim::GrayBox.Simulation, action, ::Type{ASTSampleAction})
-    ## TODO: re-examine this; currently might not work because of weird dictionary ordering
-    #d = GrayBox.environment(sim)
-    #sample = GrayBox.pack(sim, action)
-	#for k in keys(d)
-	#	sample[k].logprob = logpdf(d[k], sample[k].value)
-	#end
-	#return ASTSampleAction(sample)
+    # TODO: re-examine this; currently might not work because of weird dictionary ordering
+    d = GrayBox.environment(sim)
+    sample = GrayBox.pack(sim, action)
+	for k in keys(d)
+		sample[k].logprob = logpdf(d[k], sample[k].value)
+	end
+	return ASTSampleAction(sample)
 
-	gray_environment = GrayBox.environment(sim)
-	environment_sample = GrayBox.EnvironmentSample()
-    for (i,k) in enumerate(keys(gray_environment))
-        # log-probability from the environment's distributions (not the log_prob from the NN policy)
-        logp = logpdf(gray_environment[k], action[i])
-        environment_sample[k] = GrayBox.Sample(action[i], logp)
-    end
+	#gray_environment = GrayBox.environment(sim)
+	#environment_sample = GrayBox.EnvironmentSample()
+    #for (i,k) in enumerate(keys(gray_environment))
+    #    # log-probability from the environment's distributions (not the log_prob from the NN policy)
+    #    logp = logpdf(gray_environment[k], action[i])
+    #    environment_sample[k] = GrayBox.Sample(action[i], logp)
+    #end
 
     return ASTSampleAction(environment_sample)
 end
