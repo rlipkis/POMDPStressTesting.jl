@@ -11,8 +11,9 @@ export Simulation,
        Environment,
        EnvironmentSample,
        environment,
-       transition!
-
+       transition!,
+       pack,
+       unpack
 
 """
     GrayBox.Simulation
@@ -58,7 +59,7 @@ const EnvironmentSample = Dict{Symbol, Sample}
 
 Alias type for a state.
 """
-const State = Union{Vector{Float64},Nothing}
+const State = Union{Vector{Float32},Nothing}
 
 
 """
@@ -104,5 +105,6 @@ function count_actions(sim::Simulation)::Int64 end
 Allows general form of actions, delegates translation from Vector{Float64} to simulator.
 """
 function pack(sim::Simulation, actions::Vector{Float64})::EnvironmentSample end
+function unpack(sim::Simulation, actions::EnvironmentSample)::Vector{Float32} end 
 
 end # module GrayBox

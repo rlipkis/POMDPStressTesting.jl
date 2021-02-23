@@ -106,7 +106,7 @@ function POMDPs.reward(mdp::ASTMDP, logprob::Real, isevent::Bool, isterminal::Bo
         record(mdp, prob=exp(logprob), logprob=logprob, miss_distance=miss_distance, reward=r, event=isevent)
     end
 
-    return r
+    return Float32(r)
 end
 
 
@@ -137,6 +137,13 @@ end
 """
 Generate next state and reward for AST MDP (handles episodic reward problems). Overridden from `POMDPs.gen` interface.
 """
+function POMDPs.gen(mdp::ASTMDP, s::ASTState, actions::Vector{Float32}, rng::AbstractRNG=Random.GLOBAL_RNG)
+	a = ASTSampleAction()
+	a.sample = GrayBox.pack(mdp.sim, Float64.(actions))
+	return POMDPs.gen(mdp, s, a, rng)
+ 
+end
+
 function POMDPs.gen(mdp::ASTMDP, s::ASTState, a::ASTAction, rng::AbstractRNG=Random.GLOBAL_RNG)
     @assert mdp.sim_hash == s.hash
     mdp.t_index += 1
@@ -217,7 +224,8 @@ end
 function random_action(mdp::ASTMDP{ASTSampleAction})
     environment::GrayBox.Environment = GrayBox.environment(mdp.sim)
     sample::GrayBox.EnvironmentSample = rand(environment)
-    return ASTSampleAction(sample)
+    return GrayBox.unpack(mdp.sim, sample)
+    #return ASTSampleAction(sample)
 end
 
 
@@ -245,8 +253,6 @@ function POMDPs.convert_s(::Type{Vector{Float32}}, s::ASTState, mdp::ASTMDP)
 	end
 	return s.state
 end
-
-
 
 """
 Reset AST simulation to a given state; used by the MCTS DPWSolver as the `reset_callback` function.
