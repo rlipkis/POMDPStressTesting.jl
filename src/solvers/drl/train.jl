@@ -81,28 +81,24 @@ function train!(planner::Union{TRPOPlanner, PPOPlanner})
 	# Process losses
 	m_avg(vs, n) = [sum(@view vs[i:(i+n-1)])/n for i in 1:(length(vs)-(n-1))]
 	n_smooth = 10
-	lp = solver.cₚ*[loss[1] for loss in losses]
-	lv = solver.cᵥ*[loss[2] for loss in losses]
-	le = solver.cₑ*[loss[3] for loss in losses]
+	lp = solver.cₚ * getindex.(losses, 1)
+	lv = solver.cᵥ * getindex.(losses, 2)
+	le = solver.cₑ * getindex.(losses, 3)
 	lt = -lp .+ lv .- le
 	lt_smooth = m_avg(lt, n_smooth)
 
-	# Plot losses
-	@show mean(lp)
-	@show mean(lv)
-	@show mean(le)
-	@show mean(lt)
-	x_shift = collect(1:length(lt_smooth)) .+ n_smooth/2
-	p = plot(x_shift, lt_smooth, label="total")
-	p = plot!(p, x_shift, m_avg(lp, n_smooth), label="policy")
-	p = plot!(p, x_shift, m_avg(lv, n_smooth), label="value")
-	p = plot!(p, x_shift, m_avg(le, n_smooth), label="entropy")
+	## Plot losses
+	#x_shift = collect(1:length(lt_smooth)) .+ n_smooth/2
+	#p = plot(x_shift, lt_smooth, label="total")
+	#p = plot!(p, x_shift, m_avg(lp, n_smooth), label="policy")
+	#p = plot!(p, x_shift, m_avg(lv, n_smooth), label="value")
+	#p = plot!(p, x_shift, m_avg(le, n_smooth), label="entropy")
 
-	# Save plot
-    enc = planner.env.problem.sim.encounter_number
-    outdir = "/home/p-rse/ACAS/ACAS_Sim.jl/output"
-	fn = "losses_$enc.pdf"
-	savefig(p, joinpath(outdir, fn))
+	## Save plot
+    #enc = planner.env.problem.sim.encounter_number
+    #outdir = DEFAULT_OUTDIR
+	#fn = "losses_$enc.pdf"
+	#savefig(p, joinpath(outdir, fn))
 
     return policy
 end

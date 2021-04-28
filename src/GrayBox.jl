@@ -100,11 +100,12 @@ Get total dimension of action space, to be implemented by simulator.
 function count_actions(sim::Simulation)::Int64 end
 
 """
-	pack(sim::GrayBox.Simulation, actions::Vector{Float64})::EnvironmentSample
+	pack(sim::GrayBox.Simulation, actions::Vector{<:Real})::EnvironmentSample
+	unpack(sim::GrayBox.Simulation, actions::EnvironmentSample)::Vector{Float32}
 
-Allows general form of actions, delegates translation from Vector{Float64} to simulator.
+Allows general form of actions, delegates translation to/from vector to simulator.
 """
-function pack(sim::Simulation, actions::Vector{Float64})::EnvironmentSample end
+function pack(sim::Simulation, actions::Vector{<:Real})::EnvironmentSample end
 function unpack(sim::Simulation, actions::EnvironmentSample)::Vector{Float32} end 
 
 end # module GrayBox

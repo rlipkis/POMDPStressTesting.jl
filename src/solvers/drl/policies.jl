@@ -84,23 +84,12 @@ end
 
 
 function translate_ast_action(sim::GrayBox.Simulation, action, ::Type{ASTSampleAction})
-    # TODO: re-examine this; currently might not work because of weird dictionary ordering
     d = GrayBox.environment(sim)
     sample = GrayBox.pack(sim, action)
-	for k in keys(d)
+	for k in sort(collect(keys(d))) # sorting to ensure that ordering is preserved
 		sample[k].logprob = logpdf(d[k], sample[k].value)
 	end
 	return ASTSampleAction(sample)
-
-	#gray_environment = GrayBox.environment(sim)
-	#environment_sample = GrayBox.EnvironmentSample()
-    #for (i,k) in enumerate(keys(gray_environment))
-    #    # log-probability from the environment's distributions (not the log_prob from the NN policy)
-    #    logp = logpdf(gray_environment[k], action[i])
-    #    environment_sample[k] = GrayBox.Sample(action[i], logp)
-    #end
-
-    return ASTSampleAction(environment_sample)
 end
 
 
@@ -174,7 +163,6 @@ get_policy_net(policy::CategoricalPolicy) = [policy.π]
 get_policy_net(policy::DiagonalGaussianPolicy) = [policy.μ, policy.logΣ]
 
 get_value_params(policy::Union{CategoricalPolicy, DiagonalGaussianPolicy}) = Flux.params(policy.value_net)
-
 get_value_net(policy::Union{CategoricalPolicy, DiagonalGaussianPolicy}) = [policy.value_net]
 
 
@@ -203,11 +191,3 @@ function set_action_size!(solver, mdp::MDP)
     return solver
 end
 
-function count_action_params(env::GrayBox.Environment)
-	# TODO: obsolete now (?) 
-	n = 0
-	for dist in env
-		n += GrayBox.sample_length(dist)
-	end
-	return n
-end
